@@ -56,6 +56,12 @@ CLASS zcl_utility_ninhnh DEFINITION
       RETURNING
         VALUE(rv_result) TYPE string.
 
+    CLASS-METHODS alpha_in_width
+      IMPORTING
+        iv_width TYPE i
+      CHANGING
+        cv_data  TYPE string.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -426,6 +432,35 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
     rv_result = replace( val = rv_result sub = '>' with = '&gt;' occ = 0 ).
     rv_result = replace( val = rv_result sub = `"` with = '&quot;' occ = 0 ).
     rv_result = replace( val = rv_result sub = `'` with = '&apos;' occ = 0 ).
+  ENDMETHOD.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  METHOD alpha_in_width.
+    IF cv_data IS NOT INITIAL AND cv_data CO '0123456789'.
+      cv_data = |{ cv_data ALPHA = IN WIDTH = iv_width }|.
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
