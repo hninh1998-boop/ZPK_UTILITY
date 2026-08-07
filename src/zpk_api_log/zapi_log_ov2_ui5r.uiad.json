@@ -1,0 +1,34 @@
+{
+  "formatVersion": "2",
+  "header": {
+    "description": "An SAP Fiori application.",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "appType": "ui5",
+    "catalogId": "SAP_TC_UI5_REPO_UIAD",
+    "targetMappingTitle": "API Log"
+  },
+  "ui5AppDetails": {
+    "appId": "zapilogov2"
+  },
+  "navigation": {
+    "targetMappingId": "UI5R_A130AA72A759F1679419FB36DAA345AAE102F330_TM",
+    "semanticObject": "zapi_log_ov2",
+    "action": "display",
+    "desktop": true,
+    "tablet": true,
+    "phone": true
+  },
+  "tiles": [
+    {
+      "id": "UI5R_A130AA72A759F1679419FB36DAA345AAE102F330_AL",
+      "tileType": "static",
+      "isDefault": true,
+      "standard": {
+        "title": "API Log"
+      }
+    }
+  ]
+}

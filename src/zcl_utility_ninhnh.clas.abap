@@ -62,6 +62,27 @@ CLASS zcl_utility_ninhnh DEFINITION
       CHANGING
         cv_data  TYPE string.
 
+    CLASS-METHODS write_api_log
+      IMPORTING
+        iv_uuid        TYPE sysuuid_x16
+        iv_api_type    TYPE char20
+        iv_method      TYPE string
+        iv_uri         TYPE string
+        iv_auth_type   TYPE char10
+        iv_params      TYPE string OPTIONAL
+        io_request     TYPE REF TO if_web_http_request
+        iv_response    TYPE string OPTIONAL
+        iv_status_code TYPE i OPTIONAL.
+
+    TYPES: ty_currency_raw TYPE p LENGTH 12 DECIMALS 5.
+
+    CLASS-METHODS formatted_currency_decimals
+      IMPORTING
+        iv_currency_raw       TYPE ty_currency_raw
+        iv_decimals           TYPE i
+      EXPORTING
+        ev_currency_formatted TYPE string.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -462,5 +483,124 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
       cv_data = |{ cv_data ALPHA = IN WIDTH = iv_width }|.
     ENDIF.
   ENDMETHOD.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  METHOD write_api_log.
+    DATA lv_headers TYPE string.
+
+    " ==== Build headers string ====
+    LOOP AT io_request->get_header_fields( ) INTO DATA(ls_header).
+      lv_headers = lv_headers && |{ ls_header-name }: { ls_header-value }\n|.
+    ENDLOOP.
+
+    " ==== Lấy body ====
+    DATA lv_body TYPE string.
+    TRY.
+        lv_body = io_request->get_text( ).
+      CATCH cx_web_message_error.
+        CLEAR lv_body.
+    ENDTRY.
+
+    " ==== Encode base64 ====
+    DATA(lv_headers_b64)  = cl_web_http_utility=>encode_base64( lv_headers ).
+    DATA(lv_params_b64)   = cl_web_http_utility=>encode_base64( iv_params ).
+    DATA(lv_body_b64)     = cl_web_http_utility=>encode_base64( lv_body ).
+    DATA(lv_response_b64) = cl_web_http_utility=>encode_base64( iv_response ).
+
+    INSERT ztb_api_log FROM @( VALUE #(
+      mandt       = sy-mandt
+      log_uuid    = iv_uuid
+      api_type    = iv_api_type
+      http_method = iv_method
+      uri         = iv_uri
+      auth_type   = iv_auth_type
+      params      = lv_params_b64
+      headers     = lv_headers_b64
+      body        = lv_body_b64
+      response    = lv_response_b64
+      status_code = iv_status_code
+      created_by  = sy-uname
+      created_at  = cl_abap_tstmp=>utclong2tstmp( utclong_current( ) )
+    ) ).
+  ENDMETHOD.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  METHOD formatted_currency_decimals.
+    DATA(lv_currency_str) = |{ iv_currency_raw DECIMALS = iv_decimals }|.
+
+    IF lv_currency_str CS '.'.
+      DATA(lv_len) = strlen( lv_currency_str ).
+      DATA(lv_pos) = lv_len - 1.
+
+      WHILE lv_len > 0 AND lv_currency_str+lv_pos(1) = '0'.
+        lv_len = lv_len - 1.
+        lv_pos = lv_len - 1.
+        lv_currency_str = lv_currency_str(lv_len).
+      ENDWHILE.
+
+      lv_len = strlen( lv_currency_str ).
+      lv_pos = lv_len - 1.
+      IF lv_len > 0 AND lv_currency_str+lv_pos(1) = '.'.
+
+        DATA(lv_len_minus) = lv_len - 1.
+        lv_currency_str = lv_currency_str(lv_len_minus).
+      ENDIF.
+    ENDIF.
+
+    ev_currency_formatted = lv_currency_str.
+  ENDMETHOD.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ENDCLASS.

@@ -1,0 +1,4 @@
+@EndUserText.label: 'zui_api_log'
+define service Zui_api_log {
+  expose zi_api_Log;
+}
