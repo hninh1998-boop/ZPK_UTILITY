@@ -83,6 +83,14 @@ CLASS zcl_utility_ninhnh DEFINITION
       EXPORTING
         ev_currency_formatted TYPE string.
 
+    CLASS-METHODS convert_date_to_ddmmmyy
+      IMPORTING
+                iv_date                TYPE d
+      RETURNING VALUE(rv_date_convert) TYPE string.
+
+    CLASS-METHODS format_number_trim
+      IMPORTING iv_value       TYPE p
+      RETURNING VALUE(rv_text) TYPE string.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -90,6 +98,8 @@ ENDCLASS.
 
 
 CLASS zcl_utility_ninhnh IMPLEMENTATION.
+
+
   METHOD formatted_currency.
     DATA: lv_currency_raw LIKE iv_currency_raw.
 
@@ -128,25 +138,6 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
 
     ev_currency_formatted = |{ lv_formatted }|.
   ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   METHOD get_address.
@@ -192,20 +183,6 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
     DELETE lt_parts WHERE table_line IS INITIAL.   " bỏ phần rỗng
     ev_address = concat_lines_of( table = lt_parts sep = `, ` ).
   ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   METHOD formatted_quantity.
@@ -258,49 +235,12 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   METHOD get_uom_isocode.
     SELECT SINGLE FROM I_UnitOfMeasure
     FIELDS UnitOfMeasureISOCode
     WHERE UnitOfMeasure = @iv_uom
     INTO @ev_uom_isocode.
   ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   METHOD get_api_message.
@@ -343,107 +283,12 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   METHOD convert_uome_to_uom.
     SELECT SINGLE FROM I_UnitOfMeasure
     FIELDS UnitOfMeasure
     WHERE UnitOfMeasure_E = @iv_uom_e
     INTO @ev_uom.
   ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  METHOD formatted_amount.
-    DATA(lv_integer)      = floor( iv_amount ).
-    DATA(lv_amount_x100)  = iv_amount * 100.
-    DATA(lv_int_x100)     = lv_integer * 100.
-    DATA(lv_dec_int)      = CONV int4( lv_amount_x100 - lv_int_x100 ).
-
-    " Format phần nguyên với dấu chấm ngăn cách hàng nghìn
-    DATA(lv_int_str)   = |{ CONV int8( lv_integer ) }|.
-    DATA(lv_len)       = strlen( lv_int_str ).
-    DATA(lv_formatted) = ||.
-    DATA(lv_count)     = 0.
-
-    DO lv_len TIMES.
-      lv_count += 1.
-      DATA(lv_pos) = lv_len - lv_count.
-      lv_formatted = |{ lv_int_str+lv_pos(1) }{ lv_formatted }|.
-      IF lv_count MOD 3 = 0 AND lv_pos > 0.
-        lv_formatted = |.{ lv_formatted }|.
-      ENDIF.
-    ENDDO.
-
-    " Xử lý phần thập phân: bỏ số 0 thừa ở cuối, dùng dấu phẩy
-    IF lv_dec_int <> 0.
-      DATA(lv_dec_str) = |{ lv_dec_int WIDTH = 2 ALIGN = RIGHT PAD = '0' }|.
-      REPLACE ALL OCCURRENCES OF REGEX '0+$' IN lv_dec_str WITH ''.
-      IF lv_dec_str IS NOT INITIAL.
-        lv_formatted = |{ lv_formatted },{ lv_dec_str }|.
-      ENDIF.
-    ENDIF.
-
-    rv_formatted = lv_formatted.
-  ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   METHOD escape_xml.
@@ -456,49 +301,11 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   METHOD alpha_in_width.
     IF cv_data IS NOT INITIAL AND cv_data CO '0123456789'.
       cv_data = |{ cv_data ALPHA = IN WIDTH = iv_width }|.
     ENDIF.
   ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   METHOD write_api_log.
@@ -541,24 +348,6 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   METHOD formatted_currency_decimals.
     DATA(lv_currency_str) = |{ iv_currency_raw DECIMALS = iv_decimals }|.
 
@@ -585,22 +374,75 @@ CLASS zcl_utility_ninhnh IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD formatted_amount.
+    DATA(lv_integer)      = floor( iv_amount ).
+    DATA(lv_amount_x100)  = iv_amount * 100.
+    DATA(lv_int_x100)     = lv_integer * 100.
+    DATA(lv_dec_int)      = CONV int4( lv_amount_x100 - lv_int_x100 ).
+
+    " Format phần nguyên với dấu chấm ngăn cách hàng nghìn
+    DATA(lv_int_str)   = |{ CONV int8( lv_integer ) }|.
+    DATA(lv_len)       = strlen( lv_int_str ).
+    DATA(lv_formatted) = ||.
+    DATA(lv_count)     = 0.
+
+    DO lv_len TIMES.
+      lv_count += 1.
+      DATA(lv_pos) = lv_len - lv_count.
+      lv_formatted = |{ lv_int_str+lv_pos(1) }{ lv_formatted }|.
+      IF lv_count MOD 3 = 0 AND lv_pos > 0.
+        lv_formatted = |.{ lv_formatted }|.
+      ENDIF.
+    ENDDO.
+
+    " Xử lý phần thập phân: bỏ số 0 thừa ở cuối, dùng dấu phẩy
+    IF lv_dec_int <> 0.
+      DATA(lv_dec_str) = |{ lv_dec_int WIDTH = 2 ALIGN = RIGHT PAD = '0' }|.
+      REPLACE ALL OCCURRENCES OF REGEX '0+$' IN lv_dec_str WITH ''.
+      IF lv_dec_str IS NOT INITIAL.
+        lv_formatted = |{ lv_formatted },{ lv_dec_str }|.
+      ENDIF.
+    ENDIF.
+
+    rv_formatted = lv_formatted.
+  ENDMETHOD.
 
 
 
+  METHOD convert_date_to_ddmmmyy.
+    CONSTANTS lc_months TYPE string VALUE 'JanFebMarAprMayJunJulAugSepOctNovDec'.
+    IF iv_date IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    DATA(lv_month) = CONV i( iv_date+4(2) ).
+    IF lv_month < 1 OR lv_month > 12.
+      RETURN.
+    ENDIF.
+
+    rv_date_convert = |{ iv_date+6(2) }-{ substring( val = lc_months
+                                                     off = ( lv_month - 1 ) * 3
+                                                     len = 3 ) }-{ iv_date+2(2) }|.
+  ENDMETHOD.
 
 
 
+  METHOD format_number_trim.
+    " iv_value TYPE p / any numeric, rv_text TYPE string
+    rv_text = |{ iv_value DECIMALS = 3 NUMBER = RAW }|.
 
+    IF rv_text CS '.'.
+      WHILE strlen( rv_text ) > 0 AND substring( val = rv_text
+                                                 off = strlen( rv_text ) - 1
+                                                 len = 1 ) = '0'.
+        rv_text = substring( val = rv_text len = strlen( rv_text ) - 1 ).
+      ENDWHILE.
 
-
-
-
-
-
-
-
-
-
-
+      IF strlen( rv_text ) > 0 AND substring( val = rv_text
+                                              off = strlen( rv_text ) - 1
+                                              len = 1 ) = '.'.
+        rv_text = substring( val = rv_text len = strlen( rv_text ) - 1 ).
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.

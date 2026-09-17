@@ -16,29 +16,13 @@ ENDCLASS.
 
 
 
-CLASS zcl_utility_eml IMPLEMENTATION.
+CLASS ZCL_UTILITY_EML IMPLEMENTATION.
+
+
   METHOD if_oo_adt_classrun~main.
     "Read Entitites
     read_entities_note( out = out ).
   ENDMETHOD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   METHOD read_entities_note.
@@ -64,5 +48,4 @@ CLASS zcl_utility_eml IMPLEMENTATION.
       out->write( ls_reported ).
     ENDIF.
   ENDMETHOD.
-
 ENDCLASS.
